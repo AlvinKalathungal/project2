@@ -78,6 +78,9 @@ library(cluster)
 smiteData <- read_csv("SmiteData.csv")
 smiteData %>% select(1:4,6,8,10,12,14,16) -> smiteData
 names(smiteData)[3] <- 'dmgtype'
+names(smiteData)[4] <- 'baseHP'
+names(smiteData)[8] <- 'attackPersecond'
+names(smiteData)[10] <- 'portPHY'
 head(smiteData)
 
 ```
@@ -118,6 +121,9 @@ smite_pam
 
 smiteData %>% slice(smite_pam$id.med)
 ```
+```{r}
+plot(smite_pam, which = 2)
+```
 
 ```{r}
 library(GGally)
@@ -154,7 +160,7 @@ results <-  smiteData %>% as.data.frame %>% mutate(PC1=pca1$scores[, 1], PC2=pca
   
 results %>% ggplot(aes(PC1, PC2, color=Range)) + geom_point(size=4)
 
-results %>% ggplot(aes(PC3, PC4, color=`Attack/sec`)) + geom_point(size=4)
+results %>% ggplot(aes(PC3, PC4, color=Damage)) + geom_point(size=4)
 ```
 
 Discussions of PCA here. 
@@ -171,12 +177,15 @@ probs <- predict(fit, type="response")
 class_diag(probs, classData$dmgtype, positive="1")
 table(truth = classData$dmgtype, predictions = probs>.5)
 ```
+```{r}
+ smiteData %>% mutate(dmgtype = ifelse(dmgtype=="Physical",1,0)) %>% select(3:10) ->smitedata2
+```
 
 ```{R}
 set.seed(321)
 k = 10
 
-data <- sample_frac(smiteData)  #randomly order rows
+data <- sample_frac(smitedata2)  #randomly order rows
 folds <- rep(1:k, length.out = nrow(data))  #create folds
 
 diags <- NULL
@@ -187,12 +196,12 @@ for (i in 1:k) {
     test <- data[folds == i, ]
     truth <- test$dmgtype
     
-    fit <- glm(dmgtype ~ . , data=classData, family="binomial")
+    fit <- glm(dmgtype ~ . , data=train, family="binomial")
     
 
     probs <- predict(fit, newdata = test, type = "response")
     
-    diags <- rbind(diags, class_diag(probs, truth, positive = "Physical"))
+    diags <- rbind(diags, class_diag(probs, truth, positive = "1"))
 }
 
 # average performance metrics across all folds
@@ -206,11 +215,42 @@ Discussion here
 
 ```{R}
 library(caret)
-# non-parametric classifier code here
+fit <- knn3(dmgtype ~ . , data=classData)
+probs <- predict(fit, newdata=classData)[,2] #we choose the second column since that's the probability of "True"
+class_diag(probs, classData$dmgtype, positive="1") 
+table(truth = classData$dmgtype, predictions = probs>.5)
 ```
 
 ```{R}
-# cross-validation of np classifier here
+set.seed(322)
+k = 10
+
+data <- sample_frac(smitedata2) 
+folds <- rep(1:k, length.out = nrow(data))  
+
+diags <- NULL
+
+i = 1
+for (i in 1:k) {
+    # create training and test sets
+    train <- data[folds != i, ]
+    test <- data[folds == i, ]
+    truth <- test$dmgtype
+    
+    # train model
+    fit <- knn3(dmgtype ~ . , data = train)  ### SPECIFY THE KNN MODEL FIT TO THE TRAINING SET HERE
+    
+    # test model
+    probs <- predict(fit, newdata = test)[, 2]
+    ### GET PREDICTIONS FROM THE TRAINED MODEL ON THE TEST SET HERE
+    
+    # get performance metrics for each fold
+    diags <- rbind(diags, class_diag(probs, truth, positive = "1"))
+}
+
+# average performance metrics across all folds
+summarize_all(diags, mean)
+
 ```
 
 Discussion
@@ -219,11 +259,35 @@ Discussion
 ### Regression/Numeric Prediction
 
 ```{R}
-# regression model code here
+fit<- lm(baseHP~., data=smiteData)
+yhat<-predict(fit) 
+mean((smiteData$baseHP-yhat)^2)
 ```
 
 ```{R}
-# cross-validation of regression model here
+set.seed(322)
+k=2 #choose number of folds
+data<-smitedata2[sample(nrow(smitedata2)),] #randomly order rows
+folds<-cut(seq(1:nrow(smitedata2)),breaks=k,labels=F) #create folds
+diags<-NULL
+for(i in 1:k){
+train<-data[folds!=i,]
+test<-data[folds==i,]
+## Fit linear regression model to training set
+fit<-lm(baseHP~.,data=train)
+## Get predictions/y-hats on test set (fold i)
+yhat<-predict(fit,newdata=test)
+## Compute prediction error (MSE) for fold i
+diags<-mean((test$baseHP-yhat)^2)
+}
+mean(diags)
+```
+```{r}
+library(rpart); library(rpart.plot)
+
+fit <- train(Speed ~ . , data=smitedata2, method="rpart")
+rpart.plot(fit$finalModel,digits=4)
+
 ```
 
 Discussion
