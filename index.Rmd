@@ -329,11 +329,13 @@ print(dataMax)
 sumATKPerSec = c(py$dataMin,py$dataMean,py$dataMedian, py$dataMax, py$dataVar)
 sumATKPerSec
 ```
-Python: I didn't think anyway to be creative for the python section of this project so I decided to replicate what was done in the homework. I was interested in seeing attack per second reflected the smite characters. I grabbed that smite$attackPersecond from python. Moved it to python. Python calculated the values and I grabbed them in R and displayed them in there own variable. 
+Python: I didn't think anyway to be creative for the python section of this project so I decided to replicate what was done in the homework. I was interested in seeing attack per second reflected the smite characters. I grabbed that smite$attackPersecond from python. Moved it to python. Python calculated the values and I grabbed them in R and displayed them in their own variable. 
 
 ### Concluding Remarks
 
-Include concluding remarks here, if any
+Overall, the smite dataset is fascinating. I am quite happy the developers made a lot of sense in their character creation process. 
+
+This was a fun project and I have learned a lot about R throught these two projects. I hope to expand this knowledge in the future and use it in my future careers. Maybe grad school if I so choose to go. I am still deciding on that even though I am graduating in May.  Have a good holiday break Professor Woodward and Mr. Han. Thank you for the knowledge you have bestowed. 
 
 
 
