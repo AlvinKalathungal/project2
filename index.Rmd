@@ -335,7 +335,7 @@ Python: I didn't think anyway to be creative for the python section of this proj
 
 Overall, the smite dataset is fascinating. I am quite happy the developers made a lot of sense in their character creation process. 
 
-This was a fun project and I have learned a lot about R throught these two projects. I hope to expand this knowledge in the future and use it in my future careers. Maybe grad school if I so choose to go. I am still deciding on that even though I am graduating in May.  Have a good holiday break Professor Woodward and Mr. Han. Thank you for the knowledge you have bestowed. 
+This was a fun project and I have learned a lot about R through these two projects and in class (through zoom or in-person) I hope to expand this knowledge in the future and use it in my future careers. Maybe grad school if I so choose to go. I am still deciding on that even though I am graduating in May.  Have a good holiday break Professor Woodward and Mr. Han. Thank you for the knowledge you have bestowed. 
 
 
 
