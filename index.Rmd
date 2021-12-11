@@ -46,11 +46,11 @@ class_diag <- function(score, truth, positive, cutoff=.5){
 
 # Mining, Classification, Prediction
 
-## Name and EID here
+## Alvin Kalathungal
 
 ### Introduction 
 
-Paragraph or two introducing your datasets and variables, why they are interesting to you, etc. See instructions for more information
+So my last project revolved around COVID19, and I collected data about COVID and used R for my Pandemic Science. I was getting tired of looking at COVID19 data, and it is quite depressing. So I chose SMITE Data. SMITE is a third person multiplayer battle arena. Similar to Dota and League of Legends. It qualities are Gods and Monsters of myth as heros in the battlefield. As a nerdy kid who liked video games and mythos, Smite was one of my most played games when I was younger. I recently discovered that they are also adding other properties like RWBY and the Transformers. The main reason why I chose this dataset was due to the transformers advertisement I saw on Youtube and I thought it will be a good idea. Video games ususally have "Metas' (not the mark zuckerberg metaverse), but a catalog of character that are ideal in battle. I was hoping to see correlations in the data and find if there is numbers to prove a meta. 
 
 ```{R}
 library(tidyverse)
@@ -84,7 +84,8 @@ names(smiteData)[10] <- 'portPHY'
 head(smiteData)
 
 ```
-
+ Total attributes that were interesting and renamed columns for ease of use. 
+ 
 ### Cluster Analysis
 
 ```{R}
@@ -129,10 +130,10 @@ plot(smite_pam, which = 2)
 library(GGally)
 smiteClust <- smiteData %>%
     mutate(cluster = as.factor(smite_pam$clustering))
-ggpairs(smiteClust, columns = 3:7, aes(color = cluster))
+ggpairs(smiteClust, columns = 4:10, aes(color = cluster))
 ```
-
-Discussion of clustering here
+Did a correlation matrix to see a if there any basic correlations. We see portPHy and BaseHp are correlated at 0.71. Make sense are physical protections and base Hp go hand in hand. We see range is portPHY is negatively correlated. ranged characters would have weaker protections. 
+We picked the number of clusters by graphing sil_width with PAM. K=2. We see the gods Ra ( Class: Mage Dmgtype: magical) and Awillix ( Class: Assassin, DMg: type: Physical) We got an average sil_wid of 0.5 whcih is weak associations. When using GGpairs, we see that portpHy is correlated at 0.713. MP and Range are negatively correlated with PortPHy. Speed and Range are negatively correlated. This all makes sense game wise, ranged characters are slower. if they were faster, they would have been overpowered in the game. Overall, the data proven to make sense.  
     
     
 ### Dimensionality Reduction with PCA
@@ -152,7 +153,6 @@ ggplot() + geom_bar(aes(y=varprop, x=1:7), stat="identity") + xlab("") + geom_pa
 
 ```{r}
 round(cumsum(eigval)/sum(eigval), 2) 
-smiteData$`Attack/sec`
 ```
 
 ```{r}
@@ -160,15 +160,18 @@ results <-  smiteData %>% as.data.frame %>% mutate(PC1=pca1$scores[, 1], PC2=pca
   
 results %>% ggplot(aes(PC1, PC2, color=Range)) + geom_point(size=4)
 
-results %>% ggplot(aes(PC3, PC4, color=Damage)) + geom_point(size=4)
+results %>% ggplot(aes(PC3, PC4, color=attackPersecond )) + geom_point(size=4)
 ```
+The first ggplot we can see huge correlation with range. The second ggplot which acounts for PCA 3 and PCA 4 accounts for AttackperSecond. 
 
-Discussions of PCA here. 
+
+The Princomp ran with columns 4:10 which wre the numeric variables. and wehen running the PCA,we  see that by PCA 3, we see that 80.5% of the data is understood by then. We can keep up to PCA 3, though I did use up to PCA 4 for the ggplots. We see the that first PCA accounted for 52% when mainly removing MP and Range. The second PCA mainly removed Speed and Attack per second. Rhe there added attack per second and removed Damage. For the first PCa, it make senese, relative good HP would mean you are in frontlines, so your magical use is weaker and involved main damage. The second PCA we see a re low of attack per second, being at -0.634. and high value being 0.434. This confuses me slightly, but I can see heavier characters do slower atttack in the front lines but which would require physical resistance. The third PCA acounts for 80.5% and we see a high of attack per second, with a low damage. These would be the spammy character who shoot a lot but doesn't do a lot of damage. The damage adds over time. 
+
+The First PCA accounts for 52% if the variance, PCA2 accounts for 0.18. PCA3 accounts for 0.1. PCA 4 acounts for 0.07. So the first 4 PCAs accounts for 87% of the total variance. 
 
 ###  Linear Classifier
 
 ```{R}
-smiteData$`Damage Type`
 smiteData %>% select(3:10) -> classData
 classData <- classData %>% mutate(dmgtype = ifelse(dmgtype=="Physical",1,0))
 
@@ -206,19 +209,18 @@ for (i in 1:k) {
 
 # average performance metrics across all folds
 summarize_all(diags, mean)
-# cross-validation of linear classifier here
 ```
+For the Smite datasets, Gods are classified as magical or physical. We want to see if the model can id physical charaters/ This is a binary variable. We see that the smite data was gathered and the dmgtype of converted to Os and 1s. The model was trained and we see 46 were true phy characters with the model 38 magical characters. 4 characters were id as magical when physical and 3 were labeled as physical when magical. We see that an AUC score of .9893. This mean 98.93% the model will be accurate. In the cross validation, we see that AUC score decreased to 0.9482, which is a sign of overfitting. 
 
-Discussion here
 
 ### Non-Parametric Classifier
 
 ```{R}
 library(caret)
 fit <- knn3(dmgtype ~ . , data=classData)
-probs <- predict(fit, newdata=classData)[,2] #we choose the second column since that's the probability of "True"
+probs <- predict(fit, newdata=classData)[,2]
 class_diag(probs, classData$dmgtype, positive="1") 
-table(truth = classData$dmgtype, predictions = probs>.5)
+table(truth = classData$dmgtype, predictions = probs>.5) %>% addmargins
 ```
 
 ```{R}
@@ -252,8 +254,8 @@ for (i in 1:k) {
 summarize_all(diags, mean)
 
 ```
+In the original model, we see an AUC score of 0.9951, which would refer to that 99.51%, the model is able to predict correctly 99.51% of the time. We see that the table shown that the data was able to accurate guess 49 characters are truly as Physical character with 38 truly Magical. four of them has been id falsely labeled as truly magical. In the cross validation we see a decrease of auc to .98. This shows signs of sightly overfitting the data. Compared to the linear classifier, the nonparametric performed better as there was less of a decrease in AUC. 
 
-Discussion
 
 
 ### Regression/Numeric Prediction
@@ -290,19 +292,44 @@ rpart.plot(fit$finalModel,digits=4)
 
 ```
 
-Discussion
+I decided to do both a tree and the model. Though my main focus was the model and BaseHP of characters. The model gave use a MSE 7.54*10^-25. So it was pretty accurate. When doing the fold at k=2, we see the mean goes to 1146, which means it is drastically over fittings. This models shows drastic signs of overfitting. The tree was made to understand speed. 
 
 ### Python 
 
+
+
 ```{R}
+#R code chunk
 library(reticulate)
+use_python("/usr/bin/python3")
+
+pythondata<- smiteData$attackPersecond
 ```
 
 ```{python}
-# python code here
+## Python code chunk
+import numpy as np  
+data=(r.pythondata)
+
+#print(data)
+
+dataMedian = (np.median(data))
+print(dataMedian)
+dataMean = (np.mean(data))
+print(dataMean)
+dataVar =(np.var(data))
+print(dataVar)
+dataMin = min(data)
+print(dataMin)
+dataMax = max(data)
+print(dataMax)
 ```
 
-Discussion
+```{r}
+sumATKPerSec = c(py$dataMin,py$dataMean,py$dataMedian, py$dataMax, py$dataVar)
+sumATKPerSec
+```
+Python: I didn't think anyway to be creative for the python section of this project so I decided to replicate what was done in the homework. I was interested in seeing attack per second reflected the smite characters. I grabbed that smite$attackPersecond from python. Moved it to python. Python calculated the values and I grabbed them in R and displayed them in there own variable. 
 
 ### Concluding Remarks
 
